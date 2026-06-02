@@ -579,7 +579,7 @@
           <h2>Create Design</h2>
           <p>Upload a product, add references and copy, then generate review-ready ad options. Connect your API key to switch from mock options to real AI image generation.</p>
         </div>
-        <div class="status-pill"><span class="dot"></span><span id="statusText">API not connected</span></div>
+        <div class="status-pill"><span class="dot"></span><span id="statusText">Checking API</span></div>
       </div>
 
       <div class="grid">
@@ -589,7 +589,7 @@
           </div>
           <div class="panel-body">
             <div class="api-note">
-              Choose generation mode. Your API key is stored locally on this computer, not in browser history.
+              Choose generation mode. On Vercel, API mode uses the OPENAI_API_KEY environment variable.
               <div class="api-connect">
                 <div class="mode-switch">
                   <button class="mode-button active" id="mockModeBtn" type="button">Mock mode</button>
@@ -601,7 +601,7 @@
                 <div class="actions">
                   <button class="secondary" id="connectApiBtn" type="button">Connect API</button>
                   <button class="ghost" id="testApiBtn" type="button">Test API</button>
-                  <button class="ghost" id="forgetApiBtn" type="button">Forget key</button>
+                  <button class="ghost" id="forgetApiBtn" type="button">Use mock only</button>
                 </div>
               </div>
             </div>
@@ -797,8 +797,22 @@
     }
 
     function writeProjects() {
-      localStorage.setItem(storageKey, JSON.stringify(state.projects.slice(0, 20)));
+      const lightweightProjects = state.projects.slice(0, 20).map(toStoredProject);
+      localStorage.setItem(storageKey, JSON.stringify(lightweightProjects));
       renderProjects();
+    }
+
+    function toStoredProject(project) {
+      return {
+        ...project,
+        productDataUrl: "",
+        referenceDataUrls: [],
+        outputs: (project.outputs || []).map(output => ({
+          ...output,
+          imageUrl: output.imageUrl && output.imageUrl.length < 500000 ? output.imageUrl : ""
+        })),
+        approvedImageUrl: project.approvedImageUrl && project.approvedImageUrl.length < 500000 ? project.approvedImageUrl : ""
+      };
     }
 
     function getInput(id) {
@@ -1143,7 +1157,13 @@
       if (index >= 0) state.projects.splice(index, 1);
       state.projects.unshift(project);
       state.currentProject = project;
-      writeProjects();
+      try {
+        writeProjects();
+      } catch {
+        localStorage.removeItem(storageKey);
+        state.projects = [project];
+        els.statusText.textContent = "Project shown, history not saved";
+      }
     }
 
     function renderProjects() {
