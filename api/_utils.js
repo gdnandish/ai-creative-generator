@@ -14,9 +14,10 @@ function imageSizeFor(width, height) {
 }
 
 function buildOpenAiPrompt(body, index) {
+  const referenceCount = Number(body.referenceImageCount || 0);
   const imageContext = [
-    body.productDataUrl ? "The user uploaded a product image; create a clear hero product placement inspired by it." : "No product image was uploaded.",
-    body.referenceDataUrls?.length ? `${body.referenceDataUrls.length} reference image(s) were uploaded; use the brief to follow their layout, mood, hierarchy, and spacing.` : "No reference images were uploaded."
+    body.productUploaded ? "The user uploaded a product image in the app; create a clear hero product placement based on the written brief." : "No product image was uploaded.",
+    referenceCount ? `${referenceCount} reference image(s) were uploaded in the app; use the written brief to follow their intended layout, mood, hierarchy, and spacing.` : "No reference images were uploaded."
   ].join(" ");
 
   return [

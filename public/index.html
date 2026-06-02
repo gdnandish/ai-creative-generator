@@ -1071,11 +1071,11 @@
           width: project.width,
           height: project.height,
           styleType: project.styleType,
-          productDataUrl: project.productDataUrl,
-          referenceDataUrls: project.referenceDataUrls
+          productUploaded: Boolean(project.productDataUrl),
+          referenceImageCount: project.referenceDataUrls?.length || 0
         })
       });
-      const result = await response.json();
+      const result = await readApiResult(response);
       if (!response.ok || !result.ok) throw new Error(result.error || "AI generation failed");
       project.outputs = result.images.map((imageUrl, index) => ({
         id: crypto.randomUUID(),
@@ -1085,6 +1085,18 @@
         createdAt: new Date().toISOString()
       }));
       return project;
+    }
+
+    async function readApiResult(response) {
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return {
+          ok: false,
+          error: text.trim() || `Server returned ${response.status}`
+        };
+      }
     }
 
     async function refreshApiStatus() {
