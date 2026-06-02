@@ -1,64 +1,74 @@
-# AI Creative Generator Deployment
+# AI Creative Generator Vercel Deployment
 
-This folder is the permanent Chrome-ready version of the app.
+This folder is the permanent Chrome-ready Vercel version of the app.
 
 ## Why this fixes the Codex issue
 
 The Codex local backend cannot reach OpenAI because network access is blocked in the current Codex environment.
 
-This deployed version runs the backend on a normal hosting service with internet access.
+This deployed version runs OpenAI calls in Vercel serverless API routes.
 
 Flow:
 
 ```text
-Chrome -> deployed app/backend -> OpenAI API
+Chrome -> Vercel frontend -> Vercel /api route -> OpenAI API
 ```
 
-## Recommended host
-
-Use Render for the first deployment because this is a normal Node server.
-
-## Render setup
-
-1. Create a new GitHub repository and upload this folder.
-2. In Render, create a new Web Service.
-3. Select the repository.
-4. Use these settings:
+## Project structure
 
 ```text
-Build command: npm install
-Start command: npm start
+public/index.html
+api/status.js
+api/generate-ai.js
+api/test-openai.js
+api/set-mode.js
+api/set-key.js
+api/clear-key.js
+api/save-image.js
+package.json
+vercel.json
 ```
 
-5. Add this environment variable in Render:
+## Vercel settings
+
+Use these exact settings when importing from GitHub:
+
+```text
+Framework Preset: Other
+Install Command: npm install
+Build Command: npm run build
+Output Directory: public
+```
+
+Add this environment variable in Vercel:
 
 ```text
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-6. Deploy.
-7. Open the Render URL in Chrome.
-8. Click API mode, then Test API.
+## Deploy from GitHub
 
-## Local Chrome test
+1. Create a GitHub repository.
+2. Upload the contents of this folder to the repository root.
+3. Go to Vercel.
+4. Click Add New Project.
+5. Import the GitHub repository.
+6. Use the Vercel settings above.
+7. Add `OPENAI_API_KEY`.
+8. Deploy.
+9. Open the Vercel URL in Chrome.
+10. Click API mode, then Test API.
 
-If your own terminal has internet access and Node.js installed:
+## Local Vercel test
+
+If you install the Vercel CLI, you can test locally with:
 
 ```bash
-cd outputs/deploy-ai-creative-generator
-set OPENAI_API_KEY=your_openai_api_key
-npm start
-```
-
-Then open:
-
-```text
-http://127.0.0.1:8787
+vercel dev
 ```
 
 ## Important
 
 Do not paste your API key into frontend code.
 Do not upload `.env` files to GitHub.
-Set `OPENAI_API_KEY` only in the hosting dashboard.
-
+Set `OPENAI_API_KEY` only in Vercel Project Settings > Environment Variables.

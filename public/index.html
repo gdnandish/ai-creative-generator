@@ -749,6 +749,7 @@
 
   <script>
     const storageKey = "ai-creative-generator-projects";
+    const modeStorageKey = "ai-creative-generator-mode";
     const state = {
       projects: [],
       currentProject: null,
@@ -1090,13 +1091,16 @@
       try {
         const response = await fetch("/api/status");
         const result = await response.json();
-        applyModeUi(result.mode || "mock", result.hasSavedKey);
+        const storedMode = localStorage.getItem(modeStorageKey);
+        const mode = storedMode || (result.hasSavedKey ? "api" : "mock");
+        applyModeUi(mode, result.hasSavedKey);
       } catch {
         els.statusText.textContent = "Local server not connected";
       }
     }
 
     function applyModeUi(mode, hasSavedKey) {
+      localStorage.setItem(modeStorageKey, mode === "api" ? "api" : "mock");
       els.mockModeBtn.classList.toggle("active", mode !== "api");
       els.apiModeBtn.classList.toggle("active", mode === "api");
       els.apiKeyBox.classList.toggle("hidden", Boolean(hasSavedKey));
@@ -1333,14 +1337,20 @@
       project.outputs = [];
       els.briefText.textContent = buildBrief(project);
       renderOutputs(project);
-      try {
-        els.statusText.textContent = "Generating real AI options";
-        await generateAiOutputs(project);
-        els.statusText.textContent = "Real AI options ready";
-      } catch (error) {
-        els.statusText.textContent = "Using mock fallback";
+      const mode = localStorage.getItem(modeStorageKey) || "mock";
+      if (mode !== "api") {
+        els.statusText.textContent = "Generating mock options";
         await generateOutputs(project);
-        alert(`AI generation was not available, so mock options were created.\n\n${error.message}\n\nYour API key can be correct, but this local Codex environment may still block outgoing OpenAI network calls.`);
+        els.statusText.textContent = "Mock options ready";
+      } else {
+        try {
+          els.statusText.textContent = "Generating real AI options";
+          await generateAiOutputs(project);
+          els.statusText.textContent = "Real AI options ready";
+        } catch (error) {
+          els.statusText.textContent = "API generation failed";
+          alert(`API generation failed.\n\n${error.message}`);
+        }
       }
       upsertProject(project);
       renderOutputs(project);

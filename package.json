@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "dev": "vercel dev",
+    "build": "echo \"No build step required\"",
+    "start": "echo \"Use Vercel deployment or vercel dev locally.\""
   },
   "engines": {
     "node": ">=20"
