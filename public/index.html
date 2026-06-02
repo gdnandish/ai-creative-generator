@@ -1,0 +1,1533 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Creative Generator</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1c1b19;
+      --muted: #69645e;
+      --line: #ddd8cf;
+      --paper: #fbfaf7;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --rose: #b42342;
+      --gold: #b88a2d;
+      --blue: #2458a8;
+      --shadow: 0 18px 50px rgba(28, 27, 25, .10);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 310px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: #f0ede6;
+      border-right: 1px solid var(--line);
+      padding: 22px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), #1f4f8f);
+      font-weight: 800;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .nav button {
+      width: 100%;
+      text-align: left;
+      padding: 11px 12px;
+      border-radius: 8px;
+      color: var(--ink);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav button.active {
+      background: #fff;
+      box-shadow: 0 1px 0 rgba(28, 27, 25, .05);
+    }
+
+    .history-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 18px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .project-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .project-item {
+      padding: 11px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .55);
+      text-align: left;
+      min-width: 0;
+    }
+
+    .project-item:hover {
+      border-color: var(--line);
+      background: #fff;
+    }
+
+    .project-item strong {
+      display: block;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-item span {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    main {
+      min-width: 0;
+      padding: 24px clamp(18px, 4vw, 44px) 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .topbar h2 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1;
+    }
+
+    .topbar p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 720px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: #fff;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(310px, 420px) minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-head h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    form {
+      display: grid;
+      gap: 15px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 11px 12px;
+      min-height: 42px;
+      outline: none;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, .12);
+    }
+
+    .upload {
+      border: 1px dashed #bcb5aa;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfaf7;
+    }
+
+    .upload input {
+      border: 0;
+      padding: 0;
+      min-height: 0;
+      background: transparent;
+    }
+
+    .thumbs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .thumb {
+      width: 58px;
+      height: 58px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      object-fit: cover;
+      background: #eee;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .primary, .secondary, .ghost, .danger {
+      min-height: 42px;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 800;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .primary:hover {
+      background: var(--accent-dark);
+    }
+
+    .secondary {
+      background: #e9f2ef;
+      color: var(--accent-dark);
+    }
+
+    .ghost {
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+
+    .danger {
+      background: #fff0f2;
+      color: var(--rose);
+    }
+
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .creative {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .creative canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: var(--ratio, 1.53);
+      background: #e9e5dd;
+    }
+
+    .creative-meta {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .creative-meta strong {
+      font-size: 14px;
+    }
+
+    .creative-meta p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .creative-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .revision-box {
+      display: none;
+      margin-top: 16px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    .revision-box.active {
+      display: grid;
+      gap: 12px;
+    }
+
+    .final-download {
+      display: none;
+      margin-top: 16px;
+      border: 1px solid #b9d8ce;
+      background: #eef8f5;
+      color: #114b43;
+      border-radius: 8px;
+      padding: 13px;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .final-download.active {
+      display: flex;
+    }
+
+    .final-download strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .final-download span {
+      display: block;
+      color: #315f58;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .empty {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      padding: 30px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .brief {
+      margin-top: 16px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .brief pre {
+      margin: 0;
+      white-space: pre-wrap;
+      color: #36312c;
+      background: #f5f2ec;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      max-height: 280px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .api-note {
+      border: 1px solid #c9d9ec;
+      background: #eef5fb;
+      color: #183b66;
+      border-radius: 8px;
+      padding: 13px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .api-connect {
+      display: grid;
+      gap: 10px;
+      margin-top: 11px;
+    }
+
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mode-button {
+      min-height: 38px;
+      border-radius: 8px;
+      border: 1px solid #c9d9ec;
+      background: #fff;
+      color: #183b66;
+      font-weight: 800;
+    }
+
+    .mode-button.active {
+      background: #0f766e;
+      border-color: #0f766e;
+      color: #fff;
+    }
+
+    .api-connect .actions {
+      gap: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1040px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      main {
+        padding: 18px 14px 28px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .row, .output-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .creative-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark">AI</div>
+        <div>
+          <h1>Creative Generator</h1>
+          <p>Reference-based ad design</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="active" id="newProjectBtn" type="button">+ New design</button>
+        <button id="clearFormBtn" type="button">Reset fields</button>
+      </nav>
+
+      <div class="history-title">
+        <span>Projects</span>
+        <button class="ghost" id="clearHistoryBtn" type="button" style="min-height:30px;padding:5px 8px;font-size:12px;">Clear</button>
+      </div>
+      <div class="project-list" id="projectList"></div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div>
+          <h2>Create Design</h2>
+          <p>Upload a product, add references and copy, then generate review-ready ad options. Connect your API key to switch from mock options to real AI image generation.</p>
+        </div>
+        <div class="status-pill"><span class="dot"></span><span id="statusText">API not connected</span></div>
+      </div>
+
+      <div class="grid">
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Inputs</h3>
+          </div>
+          <div class="panel-body">
+            <div class="api-note">
+              Choose generation mode. Your API key is stored locally on this computer, not in browser history.
+              <div class="api-connect">
+                <div class="mode-switch">
+                  <button class="mode-button active" id="mockModeBtn" type="button">Mock mode</button>
+                  <button class="mode-button" id="apiModeBtn" type="button">API mode</button>
+                </div>
+                <div id="apiKeyBox">
+                  <input id="apiKeyInput" type="password" placeholder="Paste OpenAI API key once">
+                </div>
+                <div class="actions">
+                  <button class="secondary" id="connectApiBtn" type="button">Connect API</button>
+                  <button class="ghost" id="testApiBtn" type="button">Test API</button>
+                  <button class="ghost" id="forgetApiBtn" type="button">Forget key</button>
+                </div>
+              </div>
+            </div>
+            <form id="creativeForm">
+              <label>
+                Project name
+                <input id="projectName" placeholder="Monsoon Sale Creative" value="Fashion Sale Banner">
+              </label>
+
+              <div class="row">
+                <label>
+                  Width
+                  <input id="width" type="number" min="300" max="3000" value="960">
+                </label>
+                <label>
+                  Height
+                  <input id="height" type="number" min="300" max="3000" value="628">
+                </label>
+              </div>
+
+              <label>
+                Product image
+                <div class="upload">
+                  <input id="productImage" type="file" accept="image/*">
+                  <div class="thumbs" id="productPreview"></div>
+                </div>
+              </label>
+
+              <label>
+                Reference images
+                <div class="upload">
+                  <input id="referenceImages" type="file" accept="image/*" multiple>
+                  <div class="thumbs" id="referencePreview"></div>
+                </div>
+              </label>
+
+              <div class="row">
+                <label>
+                  Style type
+                  <select id="styleType">
+                    <option>premium</option>
+                    <option>minimal</option>
+                    <option>sale</option>
+                    <option>sporty</option>
+                    <option>editorial</option>
+                  </select>
+                </label>
+                <label>
+                  Text position
+                  <select id="textPosition">
+                    <option>left</option>
+                    <option>right</option>
+                    <option>center</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                Heading
+                <input id="heading" placeholder="End of Season Sale" value="End of Season Sale">
+              </label>
+
+              <label>
+                Subheading
+                <input id="subheading" placeholder="Fresh styles, limited time" value="Fresh styles, limited time">
+              </label>
+
+              <label>
+                Body copy
+                <textarea id="bodyCopy" placeholder="Add a short marketing message">Upgrade your wardrobe with curated premium picks.</textarea>
+              </label>
+
+              <div class="row">
+                <label>
+                  CTA
+                  <input id="cta" placeholder="Shop Now" value="Shop Now">
+                </label>
+                <label>
+                  Offer
+                  <input id="offer" placeholder="Use code SAVE20" value="Use code SAVE20">
+                </label>
+              </div>
+
+              <label>
+                Extra notes
+                <textarea id="notes" placeholder="Keep product on right, make it clean and premium">Keep the product fully visible. Use clean spacing and a premium digital ad look.</textarea>
+              </label>
+
+              <label>
+                Number of options
+                <select id="optionCount">
+                  <option>3</option>
+                  <option>2</option>
+                  <option>4</option>
+                </select>
+              </label>
+
+              <div class="actions">
+                <button class="primary" type="submit">Generate designs</button>
+                <button class="ghost" id="saveProjectBtn" type="button">Save draft</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Generated Options</h3>
+            <button class="secondary" id="downloadBriefBtn" type="button">Download brief</button>
+          </div>
+          <div class="panel-body">
+            <div class="empty" id="emptyState">
+              <div>
+                <strong>No options yet</strong>
+                <p>Fill the form and generate. Your outputs will appear here as reviewable mock designs.</p>
+              </div>
+            </div>
+            <div class="output-grid hidden" id="outputGrid"></div>
+            <div class="revision-box" id="revisionBox">
+              <label>
+                Revision instruction
+                <textarea id="revisionText" placeholder="Make heading bigger, move product right, use softer background"></textarea>
+              </label>
+              <div class="actions">
+                <button class="primary" id="applyRevisionBtn" type="button">Apply revision</button>
+                <button class="ghost" id="cancelRevisionBtn" type="button">Cancel</button>
+              </div>
+            </div>
+            <div class="final-download" id="finalDownloadBox">
+              <div>
+                <strong>Approved final is ready</strong>
+                <span>If the save popup is blocked, this will save through Codex when the local server is running.</span>
+              </div>
+              <button class="primary" id="manualFinalDownloadBtn" type="button">Save final</button>
+            </div>
+            <div class="brief">
+              <strong>Generated prompt brief</strong>
+              <pre id="briefText">The app will build the prompt brief here.</pre>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const storageKey = "ai-creative-generator-projects";
+    const state = {
+      projects: [],
+      currentProject: null,
+      productDataUrl: "",
+      referenceDataUrls: [],
+      selectedOptionId: null
+    };
+
+    const els = {
+      form: document.getElementById("creativeForm"),
+      projectList: document.getElementById("projectList"),
+      productImage: document.getElementById("productImage"),
+      referenceImages: document.getElementById("referenceImages"),
+      productPreview: document.getElementById("productPreview"),
+      referencePreview: document.getElementById("referencePreview"),
+      outputGrid: document.getElementById("outputGrid"),
+      emptyState: document.getElementById("emptyState"),
+      briefText: document.getElementById("briefText"),
+      revisionBox: document.getElementById("revisionBox"),
+      revisionText: document.getElementById("revisionText"),
+      applyRevisionBtn: document.getElementById("applyRevisionBtn"),
+      cancelRevisionBtn: document.getElementById("cancelRevisionBtn"),
+      finalDownloadBox: document.getElementById("finalDownloadBox"),
+      manualFinalDownloadBtn: document.getElementById("manualFinalDownloadBtn"),
+      saveProjectBtn: document.getElementById("saveProjectBtn"),
+      clearFormBtn: document.getElementById("clearFormBtn"),
+      clearHistoryBtn: document.getElementById("clearHistoryBtn"),
+      downloadBriefBtn: document.getElementById("downloadBriefBtn"),
+      mockModeBtn: document.getElementById("mockModeBtn"),
+      apiModeBtn: document.getElementById("apiModeBtn"),
+      apiKeyBox: document.getElementById("apiKeyBox"),
+      apiKeyInput: document.getElementById("apiKeyInput"),
+      connectApiBtn: document.getElementById("connectApiBtn"),
+      testApiBtn: document.getElementById("testApiBtn"),
+      forgetApiBtn: document.getElementById("forgetApiBtn"),
+      statusText: document.getElementById("statusText")
+    };
+
+    function readProjects() {
+      try {
+        state.projects = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      } catch {
+        state.projects = [];
+      }
+    }
+
+    function writeProjects() {
+      localStorage.setItem(storageKey, JSON.stringify(state.projects.slice(0, 20)));
+      renderProjects();
+    }
+
+    function getInput(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function collectForm() {
+      return {
+        id: state.currentProject?.id || crypto.randomUUID(),
+        name: getInput("projectName") || "Untitled creative",
+        width: Number(getInput("width")) || 960,
+        height: Number(getInput("height")) || 628,
+        styleType: getInput("styleType"),
+        textPosition: getInput("textPosition"),
+        heading: getInput("heading"),
+        subheading: getInput("subheading"),
+        bodyCopy: getInput("bodyCopy"),
+        cta: getInput("cta"),
+        offer: getInput("offer"),
+        notes: getInput("notes"),
+        optionCount: Number(getInput("optionCount")) || 3,
+        productDataUrl: state.productDataUrl,
+        referenceDataUrls: state.referenceDataUrls,
+        createdAt: state.currentProject?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        outputs: state.currentProject?.outputs || [],
+      revisions: state.currentProject?.revisions || []
+      };
+    }
+
+    function fileSafeName(value) {
+      return String(value || "creative").replace(/\W+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "creative";
+    }
+
+    function buildBrief(project) {
+      return [
+        `Create a polished digital advertising design in ${project.width}x${project.height}.`,
+        "",
+        "Use the uploaded product image as the main hero subject. Keep the product fully visible.",
+        "Use uploaded reference images as inspiration for layout, typography hierarchy, spacing, color mood, product placement, and background treatment. Do not copy the references exactly.",
+        "",
+        "Copy to include:",
+        `Heading: ${project.heading || "-"}`,
+        `Subheading: ${project.subheading || "-"}`,
+        `Body copy: ${project.bodyCopy || "-"}`,
+        `CTA: ${project.cta || "-"}`,
+        `Offer: ${project.offer || "-"}`,
+        "",
+        "Design direction:",
+        `Style type: ${project.styleType}`,
+        `Text position: ${project.textPosition}`,
+        `Extra notes: ${project.notes || "-"}`,
+        "",
+        "Output a fresh, readable, balanced digital marketing creative."
+      ].join("\n");
+    }
+
+    function makeThumb(src) {
+      const img = document.createElement("img");
+      img.className = "thumb";
+      img.src = src;
+      return img;
+    }
+
+    function renderThumbs(container, urls) {
+      container.innerHTML = "";
+      urls.forEach(url => container.appendChild(makeThumb(url)));
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+      const words = String(text || "").split(/\s+/).filter(Boolean);
+      let line = "";
+      let lines = 0;
+      for (let i = 0; i < words.length; i++) {
+        const test = line ? line + " " + words[i] : words[i];
+        if (ctx.measureText(test).width > maxWidth && line) {
+          ctx.fillText(line, x, y);
+          y += lineHeight;
+          lines++;
+          line = words[i];
+          if (lines >= maxLines - 1) break;
+        } else {
+          line = test;
+        }
+      }
+      if (line && lines < maxLines) ctx.fillText(line, x, y);
+      return y + lineHeight;
+    }
+
+    function paletteFor(style, optionIndex) {
+      const palettes = {
+        premium: [["#f6f2ea", "#1f2937", "#0f766e"], ["#101820", "#ffffff", "#d6aa47"], ["#e9edf2", "#18212f", "#8a315c"]],
+        minimal: [["#ffffff", "#202020", "#0f766e"], ["#f3f5f3", "#1f2937", "#2458a8"], ["#f7f1e8", "#26221f", "#b88a2d"]],
+        sale: [["#fff4f0", "#8f1d2c", "#f2a900"], ["#f8fbff", "#1d3d73", "#d12c3f"], ["#111827", "#ffffff", "#ef4444"]],
+        sporty: [["#eef8f7", "#0b3b3b", "#1e9b67"], ["#111827", "#ffffff", "#38bdf8"], ["#f4f4f0", "#1f2937", "#ff5a1f"]],
+        editorial: [["#f1eee8", "#171717", "#a36d2f"], ["#f7f7fb", "#1d2433", "#6f4aa3"], ["#efe7df", "#231f20", "#0f766e"]]
+      };
+      const set = palettes[style] || palettes.premium;
+      return set[(optionIndex - 1) % set.length];
+    }
+
+    async function drawCreative(project, optionIndex, revisionText = "") {
+      const canvas = document.createElement("canvas");
+      canvas.width = project.width;
+      canvas.height = project.height;
+      const ctx = canvas.getContext("2d");
+      const [bg, ink, accent] = paletteFor(project.styleType, optionIndex);
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+
+      const grad = ctx.createLinearGradient(0, 0, w, h);
+      grad.addColorStop(0, "rgba(255,255,255,.35)");
+      grad.addColorStop(1, "rgba(0,0,0,.08)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.fillStyle = accent;
+      ctx.globalAlpha = .9;
+      if (optionIndex === 1) {
+        ctx.fillRect(w * .06, h * .08, w * .08, h * .84);
+      } else if (optionIndex === 2) {
+        ctx.beginPath();
+        ctx.moveTo(w * .62, 0);
+        ctx.lineTo(w, 0);
+        ctx.lineTo(w, h);
+        ctx.lineTo(w * .76, h);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.fillRect(0, h * .78, w, h * .22);
+      }
+      ctx.globalAlpha = 1;
+
+      const textLeft = project.textPosition === "right" ? w * .54 : w * .10;
+      const textWidth = project.textPosition === "center" ? w * .72 : w * .38;
+      const textX = project.textPosition === "center" ? w * .14 : textLeft;
+      const productX = project.textPosition === "right" ? w * .08 : w * .55;
+
+      if (project.productDataUrl) {
+        try {
+          const img = await loadImage(project.productDataUrl);
+          const maxW = w * .38;
+          const maxH = h * .74;
+          const scale = Math.min(maxW / img.width, maxH / img.height);
+          const iw = img.width * scale;
+          const ih = img.height * scale;
+          ctx.save();
+          ctx.shadowColor = "rgba(0,0,0,.18)";
+          ctx.shadowBlur = 28;
+          ctx.shadowOffsetY = 16;
+          ctx.drawImage(img, productX + (maxW - iw) / 2, h * .15 + (maxH - ih) / 2, iw, ih);
+          ctx.restore();
+        } catch {
+          drawProductPlaceholder(ctx, productX, h, w);
+        }
+      } else {
+        drawProductPlaceholder(ctx, productX, h, w);
+      }
+
+      ctx.fillStyle = ink;
+      ctx.textBaseline = "top";
+      ctx.font = `800 ${Math.max(36, Math.round(w * .065))}px Inter, Arial, sans-serif`;
+      let y = h * .16;
+      y = wrapText(ctx, project.heading || "Campaign Heading", textX, y, textWidth, Math.round(w * .072), 3);
+
+      ctx.font = `700 ${Math.max(17, Math.round(w * .025))}px Inter, Arial, sans-serif`;
+      ctx.fillStyle = accent;
+      y += h * .025;
+      y = wrapText(ctx, project.subheading || "Campaign subheading", textX, y, textWidth, Math.round(w * .033), 2);
+
+      ctx.font = `500 ${Math.max(14, Math.round(w * .018))}px Inter, Arial, sans-serif`;
+      ctx.fillStyle = ink;
+      y += h * .02;
+      y = wrapText(ctx, project.bodyCopy || "Short marketing body copy", textX, y, textWidth, Math.round(w * .026), 3);
+
+      if (project.offer) {
+        ctx.font = `800 ${Math.max(14, Math.round(w * .019))}px Inter, Arial, sans-serif`;
+        ctx.fillStyle = accent;
+        y += h * .025;
+        wrapText(ctx, project.offer, textX, y, textWidth, Math.round(w * .026), 2);
+      }
+
+      if (project.cta) {
+        const ctaY = h * .78;
+        ctx.font = `800 ${Math.max(13, Math.round(w * .017))}px Inter, Arial, sans-serif`;
+        const padX = w * .025;
+        const btnW = Math.min(textWidth, ctx.measureText(project.cta).width + padX * 2);
+        const btnH = h * .075;
+        ctx.fillStyle = accent;
+        ctx.fillRect(textX, ctaY, btnW, btnH);
+        ctx.fillStyle = "#ffffff";
+        ctx.textBaseline = "middle";
+        ctx.fillText(project.cta, textX + padX, ctaY + btnH / 2);
+        ctx.textBaseline = "top";
+      }
+
+      ctx.font = `700 ${Math.max(10, Math.round(w * .012))}px Inter, Arial, sans-serif`;
+      ctx.fillStyle = "rgba(0,0,0,.45)";
+      ctx.fillText(`Mock option ${optionIndex}${revisionText ? " - revised" : ""}`, w * .04, h * .94);
+
+      if (revisionText) {
+        ctx.fillStyle = "rgba(255,255,255,.72)";
+        ctx.fillRect(w * .55, h * .88, w * .40, h * .07);
+        ctx.fillStyle = ink;
+        ctx.font = `600 ${Math.max(10, Math.round(w * .012))}px Inter, Arial, sans-serif`;
+        wrapText(ctx, "Revision: " + revisionText, w * .57, h * .895, w * .35, Math.round(w * .016), 2);
+      }
+
+      return canvas.toDataURL("image/png");
+    }
+
+    function drawProductPlaceholder(ctx, productX, h, w) {
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.72)";
+      ctx.strokeStyle = "rgba(0,0,0,.14)";
+      ctx.lineWidth = 2;
+      ctx.fillRect(productX, h * .18, w * .34, h * .58);
+      ctx.strokeRect(productX, h * .18, w * .34, h * .58);
+      ctx.fillStyle = "rgba(0,0,0,.45)";
+      ctx.font = `700 ${Math.max(14, Math.round(w * .018))}px Inter, Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("Product image", productX + w * .17, h * .46);
+      ctx.restore();
+    }
+
+    async function generateOutputs(project) {
+      const outputs = [];
+      for (let i = 1; i <= project.optionCount; i++) {
+        const imageUrl = await drawCreative(project, i);
+        outputs.push({
+          id: crypto.randomUUID(),
+          optionNumber: i,
+          imageUrl,
+          note: `${project.styleType} layout, text ${project.textPosition}`,
+          createdAt: new Date().toISOString()
+        });
+      }
+      project.outputs = outputs;
+      return project;
+    }
+
+    async function generateAiOutputs(project) {
+      const response = await fetch("/api/generate-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: buildBrief(project),
+          optionCount: project.optionCount,
+          width: project.width,
+          height: project.height,
+          styleType: project.styleType,
+          productDataUrl: project.productDataUrl,
+          referenceDataUrls: project.referenceDataUrls
+        })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "AI generation failed");
+      project.outputs = result.images.map((imageUrl, index) => ({
+        id: crypto.randomUUID(),
+        optionNumber: index + 1,
+        imageUrl,
+        note: `Real AI option ${index + 1}`,
+        createdAt: new Date().toISOString()
+      }));
+      return project;
+    }
+
+    async function refreshApiStatus() {
+      try {
+        const response = await fetch("/api/status");
+        const result = await response.json();
+        applyModeUi(result.mode || "mock", result.hasSavedKey);
+      } catch {
+        els.statusText.textContent = "Local server not connected";
+      }
+    }
+
+    function applyModeUi(mode, hasSavedKey) {
+      els.mockModeBtn.classList.toggle("active", mode !== "api");
+      els.apiModeBtn.classList.toggle("active", mode === "api");
+      els.apiKeyBox.classList.toggle("hidden", Boolean(hasSavedKey));
+      els.connectApiBtn.classList.toggle("hidden", Boolean(hasSavedKey));
+      els.testApiBtn.classList.toggle("hidden", !hasSavedKey);
+      els.forgetApiBtn.classList.toggle("hidden", !hasSavedKey);
+      els.statusText.textContent = mode === "api" ? "API mode" : "Mock mode";
+    }
+
+    async function setGenerationMode(mode) {
+      try {
+        const response = await fetch("/api/set-mode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Could not switch mode");
+        applyModeUi(result.mode, result.hasSavedKey);
+      } catch (error) {
+        alert(error.message);
+        refreshApiStatus();
+      }
+    }
+
+    function upsertProject(project) {
+      const index = state.projects.findIndex(item => item.id === project.id);
+      if (index >= 0) state.projects.splice(index, 1);
+      state.projects.unshift(project);
+      state.currentProject = project;
+      writeProjects();
+    }
+
+    function renderProjects() {
+      els.projectList.innerHTML = "";
+      if (!state.projects.length) {
+        const div = document.createElement("div");
+        div.className = "project-item";
+        div.innerHTML = "<strong>No saved projects</strong><span>Generated designs will appear here.</span>";
+        els.projectList.appendChild(div);
+        return;
+      }
+      state.projects.forEach(project => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "project-item";
+        btn.innerHTML = `<strong>${escapeHtml(project.name)}</strong><span>${project.width}x${project.height} - ${project.outputs?.length || 0} options</span>`;
+        btn.addEventListener("click", () => loadProject(project.id));
+        els.projectList.appendChild(btn);
+      });
+    }
+
+    function renderOutputs(project) {
+      els.briefText.textContent = buildBrief(project);
+      els.outputGrid.innerHTML = "";
+      if (!project.outputs?.length) {
+        els.emptyState.classList.remove("hidden");
+        els.outputGrid.classList.add("hidden");
+        return;
+      }
+      els.emptyState.classList.add("hidden");
+      els.outputGrid.classList.remove("hidden");
+      els.outputGrid.style.setProperty("--ratio", project.width / project.height);
+
+      project.outputs.forEach(output => {
+        const card = document.createElement("article");
+        card.className = "creative";
+        card.innerHTML = `
+          <img alt="Generated option ${output.optionNumber}" src="${output.imageUrl}" style="width:100%;display:block;aspect-ratio:${project.width}/${project.height};object-fit:cover;background:#eee;">
+          <div class="creative-meta">
+            <strong>Option ${output.optionNumber}</strong>
+            <p>${escapeHtml(output.note || "Generated design option")}</p>
+            <div class="creative-actions">
+              <button class="secondary" type="button" data-revise="${output.id}">Revise</button>
+              <button class="ghost" type="button" data-download="${output.id}">Save as</button>
+              <button class="ghost" type="button" data-approve="${output.id}">Approve + Save</button>
+              <button class="danger" type="button" data-remove="${output.id}">Remove</button>
+            </div>
+          </div>
+        `;
+        els.outputGrid.appendChild(card);
+      });
+    }
+
+    function loadProject(id) {
+      const project = state.projects.find(item => item.id === id);
+      if (!project) return;
+      state.currentProject = project;
+      state.productDataUrl = project.productDataUrl || "";
+      state.referenceDataUrls = project.referenceDataUrls || [];
+      setForm(project);
+      renderThumbs(els.productPreview, state.productDataUrl ? [state.productDataUrl] : []);
+      renderThumbs(els.referencePreview, state.referenceDataUrls);
+      renderOutputs(project);
+      els.finalDownloadBox.classList.toggle("active", Boolean(project.approvedImageUrl));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function setForm(project) {
+      document.getElementById("projectName").value = project.name || "";
+      document.getElementById("width").value = project.width || 960;
+      document.getElementById("height").value = project.height || 628;
+      document.getElementById("styleType").value = project.styleType || "premium";
+      document.getElementById("textPosition").value = project.textPosition || "left";
+      document.getElementById("heading").value = project.heading || "";
+      document.getElementById("subheading").value = project.subheading || "";
+      document.getElementById("bodyCopy").value = project.bodyCopy || "";
+      document.getElementById("cta").value = project.cta || "";
+      document.getElementById("offer").value = project.offer || "";
+      document.getElementById("notes").value = project.notes || "";
+      document.getElementById("optionCount").value = String(project.optionCount || 3);
+    }
+
+    function resetForm() {
+      state.currentProject = null;
+      state.productDataUrl = "";
+      state.referenceDataUrls = [];
+      els.form.reset();
+      document.getElementById("projectName").value = "Fashion Sale Banner";
+      document.getElementById("width").value = 960;
+      document.getElementById("height").value = 628;
+      document.getElementById("heading").value = "End of Season Sale";
+      document.getElementById("subheading").value = "Fresh styles, limited time";
+      document.getElementById("bodyCopy").value = "Upgrade your wardrobe with curated premium picks.";
+      document.getElementById("cta").value = "Shop Now";
+      document.getElementById("offer").value = "Use code SAVE20";
+      document.getElementById("notes").value = "Keep the product fully visible. Use clean spacing and a premium digital ad look.";
+      renderThumbs(els.productPreview, []);
+      renderThumbs(els.referencePreview, []);
+      renderOutputs({ outputs: [], width: 960, height: 628 });
+      els.briefText.textContent = "The app will build the prompt brief here.";
+      els.revisionBox.classList.remove("active");
+      els.finalDownloadBox.classList.remove("active");
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function dataUrlToBlob(dataUrl) {
+      const parts = dataUrl.split(",");
+      const mime = parts[0].match(/:(.*?);/)?.[1] || "application/octet-stream";
+      const binary = atob(parts[1]);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new Blob([bytes], { type: mime });
+    }
+
+    async function saveToCodexOutputs(url, filename) {
+      if (!url.startsWith("data:image/png")) return null;
+      const response = await fetch("/api/save-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: url, filename })
+      });
+      if (!response.ok) throw new Error("Local save server is not available");
+      const result = await response.json();
+      if (!result.ok) throw new Error(result.error || "Could not save image");
+      return result.path;
+    }
+
+    async function saveDataUrlAsFile(url, filename) {
+      if (window.showSaveFilePicker) {
+        try {
+          const blob = url.startsWith("data:") ? dataUrlToBlob(url) : await fetch(url).then(response => response.blob());
+          const extension = filename.split(".").pop() || "png";
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description: extension === "txt" ? "Text file" : "Image file",
+              accept: extension === "txt" ? { "text/plain": [".txt"] } : { "image/png": [".png"] }
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return { mode: "picker" };
+        } catch (error) {
+          if (error.name === "AbortError") throw error;
+        }
+      }
+
+      try {
+        const savedPath = await saveToCodexOutputs(url, filename);
+        return { mode: "codex", path: savedPath };
+      } catch {
+        downloadDataUrl(url, filename);
+        return { mode: "download" };
+      }
+    }
+
+    function downloadDataUrl(url, filename) {
+      const link = document.createElement("a");
+      const objectUrl = url.startsWith("data:") ? URL.createObjectURL(dataUrlToBlob(url)) : url;
+      link.href = objectUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      if (objectUrl !== url) setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    }
+
+    async function downloadText(text, filename) {
+      const blob = new Blob([text], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      try {
+        await saveDataUrlAsFile(url, filename);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    els.productImage.addEventListener("change", async event => {
+      const file = event.target.files[0];
+      state.productDataUrl = file ? await fileToDataUrl(file) : "";
+      renderThumbs(els.productPreview, state.productDataUrl ? [state.productDataUrl] : []);
+    });
+
+    els.referenceImages.addEventListener("change", async event => {
+      const files = Array.from(event.target.files).slice(0, 5);
+      state.referenceDataUrls = await Promise.all(files.map(fileToDataUrl));
+      renderThumbs(els.referencePreview, state.referenceDataUrls);
+    });
+
+    els.form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const project = collectForm();
+      project.outputs = [];
+      els.briefText.textContent = buildBrief(project);
+      renderOutputs(project);
+      try {
+        els.statusText.textContent = "Generating real AI options";
+        await generateAiOutputs(project);
+        els.statusText.textContent = "Real AI options ready";
+      } catch (error) {
+        els.statusText.textContent = "Using mock fallback";
+        await generateOutputs(project);
+        alert(`AI generation was not available, so mock options were created.\n\n${error.message}\n\nYour API key can be correct, but this local Codex environment may still block outgoing OpenAI network calls.`);
+      }
+      upsertProject(project);
+      renderOutputs(project);
+    });
+
+    els.connectApiBtn.addEventListener("click", async () => {
+      const apiKey = els.apiKeyInput.value.trim();
+      if (!apiKey) {
+        alert("Paste your OpenAI API key first.");
+        return;
+      }
+      try {
+        els.statusText.textContent = "Connecting API";
+        const response = await fetch("/api/set-key", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apiKey })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Could not connect API key");
+        els.apiKeyInput.value = "";
+        applyModeUi(result.mode || "api", true);
+        alert("API connected. You can generate real AI designs now.");
+      } catch (error) {
+        els.statusText.textContent = "API connection failed";
+        alert(error.message);
+      }
+    });
+
+    els.mockModeBtn.addEventListener("click", () => setGenerationMode("mock"));
+    els.apiModeBtn.addEventListener("click", () => setGenerationMode("api"));
+
+    els.forgetApiBtn.addEventListener("click", async () => {
+      if (!confirm("Forget the saved API key from this local app?")) return;
+      try {
+        const response = await fetch("/api/clear-key", { method: "POST" });
+        const result = await response.json();
+        applyModeUi(result.mode || "mock", false);
+      } catch {
+        els.statusText.textContent = "Could not forget key";
+      }
+    });
+
+    els.testApiBtn.addEventListener("click", async () => {
+      try {
+        els.statusText.textContent = "Testing API";
+        const response = await fetch("/api/test-openai", { method: "POST" });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "API test failed");
+        els.statusText.textContent = "API test passed";
+        alert("API test passed. OpenAI is reachable.");
+      } catch (error) {
+        els.statusText.textContent = "API test failed";
+        alert(error.message);
+      }
+    });
+
+    els.saveProjectBtn.addEventListener("click", () => {
+      const project = collectForm();
+      upsertProject(project);
+      els.briefText.textContent = buildBrief(project);
+      els.statusText.textContent = "Draft saved";
+    });
+
+    els.outputGrid.addEventListener("click", async event => {
+      const reviseId = event.target.dataset.revise;
+      const downloadId = event.target.dataset.download;
+      const approveId = event.target.dataset.approve;
+      const removeId = event.target.dataset.remove;
+      const project = state.currentProject;
+      if (!project) return;
+
+      if (reviseId) {
+        state.selectedOptionId = reviseId;
+        els.revisionText.value = "";
+        els.revisionBox.classList.add("active");
+        els.revisionText.focus();
+      }
+
+      if (downloadId) {
+        const output = project.outputs.find(item => item.id === downloadId);
+        if (output) {
+          try {
+            const saved = await saveDataUrlAsFile(output.imageUrl, `${fileSafeName(project.name)}-option-${output.optionNumber}.png`);
+            els.statusText.textContent = saved.mode === "codex" ? "Saved to Codex outputs" : "Save started";
+            if (saved.path) alert(`Saved here:\n${saved.path}`);
+          } catch {
+            els.statusText.textContent = "Save cancelled";
+          }
+        }
+      }
+
+      if (approveId) {
+        const approved = project.outputs.find(item => item.id === approveId);
+        project.outputs = project.outputs.map(item => ({ ...item, note: item.id === approveId && !item.note.includes("approved") ? `${item.note} - approved` : item.note }));
+        project.approvedOutputId = approveId;
+        project.approvedImageUrl = approved?.imageUrl || "";
+        upsertProject(project);
+        renderOutputs(project);
+        if (approved) {
+          try {
+            const saved = await saveDataUrlAsFile(approved.imageUrl, `${fileSafeName(project.name)}-approved-final.png`);
+            if (saved.path) alert(`Saved here:\n${saved.path}`);
+          } catch {
+            els.statusText.textContent = "Save cancelled";
+          }
+          els.finalDownloadBox.classList.add("active");
+        }
+        els.statusText.textContent = "Approved final ready";
+      }
+
+      if (removeId) {
+        project.outputs = project.outputs.filter(item => item.id !== removeId);
+        upsertProject(project);
+        renderOutputs(project);
+      }
+    });
+
+    els.applyRevisionBtn.addEventListener("click", async () => {
+      const project = state.currentProject;
+      const selected = project?.outputs.find(item => item.id === state.selectedOptionId);
+      if (!project || !selected) return;
+      const instruction = els.revisionText.value.trim();
+      if (!instruction) return;
+
+      els.statusText.textContent = "Applying revision";
+      const imageUrl = await drawCreative(project, selected.optionNumber, instruction);
+      const revised = {
+        ...selected,
+        id: crypto.randomUUID(),
+        imageUrl,
+        note: `Revision: ${instruction}`,
+        createdAt: new Date().toISOString()
+      };
+      project.outputs.unshift(revised);
+      project.revisions = project.revisions || [];
+      project.revisions.push({
+        id: crypto.randomUUID(),
+        sourceOutputId: selected.id,
+        instruction,
+        imageUrl,
+        createdAt: new Date().toISOString()
+      });
+      upsertProject(project);
+      renderOutputs(project);
+      els.revisionBox.classList.remove("active");
+      els.statusText.textContent = "Revision ready";
+    });
+
+    els.cancelRevisionBtn.addEventListener("click", () => {
+      els.revisionBox.classList.remove("active");
+      state.selectedOptionId = null;
+    });
+
+    els.manualFinalDownloadBtn.addEventListener("click", async () => {
+      const project = state.currentProject;
+      if (!project?.approvedImageUrl) return;
+      try {
+        const saved = await saveDataUrlAsFile(project.approvedImageUrl, `${fileSafeName(project.name)}-approved-final.png`);
+        els.statusText.textContent = saved.mode === "codex" ? "Saved to Codex outputs" : "Save started";
+        if (saved.path) alert(`Saved here:\n${saved.path}`);
+      } catch {
+        els.statusText.textContent = "Save cancelled";
+      }
+    });
+
+    els.clearFormBtn.addEventListener("click", resetForm);
+    document.getElementById("newProjectBtn").addEventListener("click", resetForm);
+
+    els.clearHistoryBtn.addEventListener("click", () => {
+      if (!confirm("Clear saved project history from this browser?")) return;
+      state.projects = [];
+      localStorage.removeItem(storageKey);
+      renderProjects();
+      resetForm();
+    });
+
+    els.downloadBriefBtn.addEventListener("click", async () => {
+      const project = collectForm();
+      await downloadText(buildBrief(project), `${fileSafeName(project.name)}-brief.txt`);
+    });
+
+    readProjects();
+    renderProjects();
+    resetForm();
+    refreshApiStatus();
+  </script>
+</body>
+</html>
+
